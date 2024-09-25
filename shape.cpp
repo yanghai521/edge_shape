@@ -10,7 +10,7 @@ Mat ChipMatch::GaussImg(Mat& srcimage, int kernelsize, double sigma)
 {
 	Mat src = srcimage.clone();
 	Mat gaussimg;
-	// ¸ßË¹ÂË²¨Æ÷¶ÔÍ¼ÏñÆ½»¬Ä£ºı
+	// é«˜æ–¯æ»¤æ³¢å™¨å¯¹å›¾åƒå¹³æ»‘æ¨¡ç³Š
 	//int kernelsize = 7;
 	//double sigma = 1.6;
 	GaussianBlur(src, gaussimg, Size(kernelsize, kernelsize), sigma);
@@ -19,31 +19,31 @@ Mat ChipMatch::GaussImg(Mat& srcimage, int kernelsize, double sigma)
 
 Mat ChipMatch::EdgeImage(Mat& guassimage, double low, double max, Point** t_Points, double** t_derivativeX, double** t_derivativeY) {
 	Mat img = guassimage.clone();
-	//´ó½òãĞÖµÇø·ÖÄ£°åÍ¼ÏñÄ¿±êÇøÓòÓë±³¾°
+	//å¤§æ´¥é˜ˆå€¼åŒºåˆ†æ¨¡æ¿å›¾åƒç›®æ ‡åŒºåŸŸä¸èƒŒæ™¯
 	Mat binaryImage;
 	threshold(img, binaryImage, 0, 255, THRESH_BINARY_INV | THRESH_OTSU);
-	//ÖÆ×÷ÑÚÄ¤
+	//åˆ¶ä½œæ©è†œ
 	Mat dilatemask;
 	Mat kernel = getStructuringElement(MORPH_RECT, Size(5, 5));
 	dilate(binaryImage, dilatemask, kernel);
-	//Ä£°åÍ¼Ïñ¸ß¡¢¿í
+	//æ¨¡æ¿å›¾åƒé«˜ã€å®½
 	modelHeight = img.rows;
 	modelWidth = img.cols;
-	//ÌáÈ¡Ä£°åÍ¼ÏñÄ¿±ê±ßÔµµãµÄx/y·½ÏòÏòÁ¿
+	//æå–æ¨¡æ¿å›¾åƒç›®æ ‡è¾¹ç¼˜ç‚¹çš„x/yæ–¹å‘å‘é‡
 	
     //***//
 	
-	//´´½¨Ä£°åÍ¼ÏñÄ¿±ê±ßÔµµãÌİ¶È·ùÖµ¡¢ÏòÁ¿Ö¸Ïò·½ÏòÍ¼Ïñ¾ØÕó
+	//åˆ›å»ºæ¨¡æ¿å›¾åƒç›®æ ‡è¾¹ç¼˜ç‚¹æ¢¯åº¦å¹…å€¼ã€å‘é‡æŒ‡å‘æ–¹å‘å›¾åƒçŸ©é˜µ
 	Mat df_grad1(modelHeight, modelWidth, CV_32FC1);
 	Mat df_tan1(modelHeight, modelWidth, CV_64F);
 	float left_p;
 	float right_p;
-	//·Ç×î´óÖµÒÖÖÆºóµÄÌİ¶È·ùÖµ
+	//éæœ€å¤§å€¼æŠ‘åˆ¶åçš„æ¢¯åº¦å¹…å€¼
 	Mat G_n(modelHeight, modelWidth, CV_32F);
 	Mat out_img;
 	double tan0;
 	double tan;
-	//¼ÆËãÄ£°åµÄÌİ¶È·ùÖµÍ¼ÏñºÍ½Ç¶ÈÍ¼Ïñ
+	//è®¡ç®—æ¨¡æ¿çš„æ¢¯åº¦å¹…å€¼å›¾åƒå’Œè§’åº¦å›¾åƒ
 	for (int i = 1; i < modelHeight - 1; i++) {
 		for (int j = 1; j < modelWidth - 1; j++) {
 			float soble_x = imgX.at<float>(i, j);
@@ -53,7 +53,7 @@ Mat ChipMatch::EdgeImage(Mat& guassimage, double low, double max, Point** t_Poin
 			df_tan1.at<double>(i, j) = tan;
 		}
 	}
-	//ÔÚÌİ¶È·ùÖµÍ¼ÏñÖĞ·Ç×î´óÒÖÖÆ£ºÏ¸»¯Ô­Ê¼±ßÔµ
+	//åœ¨æ¢¯åº¦å¹…å€¼å›¾åƒä¸­éæœ€å¤§æŠ‘åˆ¶ï¼šç»†åŒ–åŸå§‹è¾¹ç¼˜
 	
 
 
@@ -63,179 +63,116 @@ Mat ChipMatch::EdgeImage(Mat& guassimage, double low, double max, Point** t_Poin
 
 
 
-	//Ë«ãĞÖµ´¦Àí
-	out_img = G_n.clone();
-	for (int i = 1; i < modelHeight - 1; i++) {
-		for (int j = 1; j < modelWidth - 1; j++) {
-			if (out_img.at<float>(i, j) < low) {
-				out_img.at<float>(i, j) = 0;
-			}
-			else if (out_img.at<float>(i - 1, j - 1) < max &&
-				out_img.at<float>(i, j - 1) < max &&
-				out_img.at<float>(i + 1, j - 1) < max &&
-				out_img.at<float>(i - 1, j) < max &&
-				out_img.at<float>(i + 1, j) < max &&
-				out_img.at<float>(i - 1, j + 1) < max &&
-				out_img.at<float>(i, j + 1) < max &&
-				out_img.at<float>(i + 1, j + 1) < max) {
-				out_img.at<float>(i, j) = 0;
-			}
-		}
-	}
-	Mat out_img0;
-	out_img.convertTo(out_img0, CV_8U);
-	//ÃÉ°æ²Ù×÷£ºÈ¥³ıÄ¿±êÍ¼Ïñ±ßÔµÄÚµÄÔÓ²¨ºÍÔëÉù
+	//åŒé˜ˆå€¼å¤„ç†
+	
+	//è’™ç‰ˆæ“ä½œï¼šå»é™¤ç›®æ ‡å›¾åƒè¾¹ç¼˜å†…çš„æ‚æ³¢å’Œå™ªå£°
 	Mat outputImage;
 	out_img.copyTo(outputImage, dilatemask);
 
-	//³õÊ¼»¯Ä£°åĞÅÏ¢ÃèÊö×ÓÖĞµãÊıÁ¿
+	//åˆå§‹åŒ–æ¨¡æ¿ä¿¡æ¯æè¿°å­ä¸­ç‚¹æ•°é‡
 	candidatePoint_n = 0;
-	//Ä£°åÖĞËùÓĞ±ßÔµµãµÄx¡¢yÏà¼ÓÖ®ºÍ
+	//æ¨¡æ¿ä¸­æ‰€æœ‰è¾¹ç¼˜ç‚¹çš„xã€yç›¸åŠ ä¹‹å’Œ
 	int x_sum = 0;
 	int y_sum = 0;
 	int initial_MatchPoint = 0;
-	//´´½¨´æ´¢±ßÔµµã×ø±ê¡¢XÆ«µ¼¡¢YÆ«µ¼µÄ¶ÑÄÚ´æ²¢ÔÚÎö¹¹º¯ÊıÖĞÊÍ·Å
-	//¹«¹²»¯¡¢²»ÔÙº¯ÊıÖ®¼ä´«µİ---¸Ä±ä´¦
+	//åˆ›å»ºå­˜å‚¨è¾¹ç¼˜ç‚¹åæ ‡ã€Xåå¯¼ã€Yåå¯¼çš„å †å†…å­˜å¹¶åœ¨ææ„å‡½æ•°ä¸­é‡Šæ”¾
+	//å…¬å…±åŒ–ã€ä¸å†å‡½æ•°ä¹‹é—´ä¼ é€’---æ”¹å˜å¤„
 	
 
 
 
-	//ÔÚÄ£°åÎ´Ï¡ÊèÇ°£¬¼ÆËãÄ£°åµÄ²Î¿¼µã
+	//åœ¨æ¨¡æ¿æœªç¨€ç–å‰ï¼Œè®¡ç®—æ¨¡æ¿çš„å‚è€ƒç‚¹
 	
 
 
-	//ËãÊõÆ½¾ù¼ÆËã²Î¿¼µã×ø±ê
+	//ç®—æœ¯å¹³å‡è®¡ç®—å‚è€ƒç‚¹åæ ‡
 	
 
 
 
 
-	//-----------¡°±ßÔµÏ¡Êè²ßÂÔ¡±------------
+	//-----------â€œè¾¹ç¼˜ç¨€ç–ç­–ç•¥â€------------
 
-	//1¡¢Ê×ÏÈ¶¨ÒåÓ°ÏìÏàËÆ¶È³Ì¶ÈµÄ±ê×¼¡ª¡ªÏà¶ÔÌİ¶È·ùÖµ
+	//1ã€é¦–å…ˆå®šä¹‰å½±å“ç›¸ä¼¼åº¦ç¨‹åº¦çš„æ ‡å‡†â€”â€”ç›¸å¯¹æ¢¯åº¦å¹…å€¼
 	double dx;
 	double dy;
-	//µ±Ç°µãµÄÌİ¶È·ùÖµ
+	//å½“å‰ç‚¹çš„æ¢¯åº¦å¹…å€¼
 	double M;
-	//µ±Ç°µãµÄ¹éÒ»»¯Ìİ¶È·ùÖµ
+	//å½“å‰ç‚¹çš„å½’ä¸€åŒ–æ¢¯åº¦å¹…å€¼
 	double gradientX;
 	double gradientY;
-	//Ä£°åĞÅÏ¢ÃèÊö×ÓÖĞ±ßÔµµã¼¯¡¢x¡¢y·½ÏòµÄ¹éÒ»»¯Ìİ¶È·ùÖµ¼¯
+	//æ¨¡æ¿ä¿¡æ¯æè¿°å­ä¸­è¾¹ç¼˜ç‚¹é›†ã€xã€yæ–¹å‘çš„å½’ä¸€åŒ–æ¢¯åº¦å¹…å€¼é›†
 	Point point;
 	vector<Point> point_all;
 	vector<double> gradientXs;
 	vector<double> gradientYs;
-	//Ñ­»·¼ÆÊı
+	//å¾ªç¯è®¡æ•°
 	int w = 0;
-	//ÁÚÓòrµÄ´óĞ¡
+	//é‚»åŸŸrçš„å¤§å°
 	int r = 4;
-	//¶¨ÒåÒÔµ±Ç°µãÎªÖĞĞÄµÄrÁÚÓòÄÚµÄÆäËûµãµÄÌİ¶È·ùÖµ
+	//å®šä¹‰ä»¥å½“å‰ç‚¹ä¸ºä¸­å¿ƒçš„ré‚»åŸŸå†…çš„å…¶ä»–ç‚¹çš„æ¢¯åº¦å¹…å€¼
 	double dx1, dy1, M1;
-	//¶¨ÒåÏà¶ÔÌİ¶È·ùÖµ¡¢Ïà¶ÔÌİ¶È·ùÖµ¼¯
+	//å®šä¹‰ç›¸å¯¹æ¢¯åº¦å¹…å€¼ã€ç›¸å¯¹æ¢¯åº¦å¹…å€¼é›†
 	
 
 
 
 
 
-	//2¡¢Ìİ¶È·ùÖµãĞÖµÏ¡Êè½×¶Î
+	//2ã€æ¢¯åº¦å¹…å€¼é˜ˆå€¼ç¨€ç–é˜¶æ®µ
 	int number = point_all.size();
-	//Ã¿´Î±éÀú±È½ÏÕÒµ½µÄ×î´óÏà¶ÔÌİ¶È·ùÖµ¶ÔÓ¦µÄµã×ø±ê
+	//æ¯æ¬¡éå†æ¯”è¾ƒæ‰¾åˆ°çš„æœ€å¤§ç›¸å¯¹æ¢¯åº¦å¹…å€¼å¯¹åº”çš„ç‚¹åæ ‡
 	Point point0;
-	//¶¨ÒåÏ¡ÊèºóµÄ×î¼Ñ±ßÔµµãµÄ¹éÒ»»¯Ìİ¶È·ùÖµ¼¯
+	//å®šä¹‰ç¨€ç–åçš„æœ€ä½³è¾¹ç¼˜ç‚¹çš„å½’ä¸€åŒ–æ¢¯åº¦å¹…å€¼é›†
 	vector<double> gradientXs_best;
 	vector<double> gradientYs_best;
 	vector<Point> copy_point_all(point_all);
-	//¶¨ÒåÃ¿´Î±éÀúµã¼¯ÕÒµ½µÄ×î´óÏà¶ÔÌİ¶È·ùÖµÊ±£¬¶ÔÓ¦ÔÚ¼¯ºÏÖĞµÄ´ÎĞòÎ»ÖÃ
+	//å®šä¹‰æ¯æ¬¡éå†ç‚¹é›†æ‰¾åˆ°çš„æœ€å¤§ç›¸å¯¹æ¢¯åº¦å¹…å€¼æ—¶ï¼Œå¯¹åº”åœ¨é›†åˆä¸­çš„æ¬¡åºä½ç½®
 	double E_max;
 	int maxIndex1;
-	//¶¨ÒåÏ¡Êèºó×î¼Ñ±ßÔµµã¼¯¡¢±ßÔµµãµÄÏà¶ÔÌİ¶È·ùÖµ¼¯
+	//å®šä¹‰ç¨€ç–åæœ€ä½³è¾¹ç¼˜ç‚¹é›†ã€è¾¹ç¼˜ç‚¹çš„ç›¸å¯¹æ¢¯åº¦å¹…å€¼é›†
 	vector<double> E_best;
 	vector<Point> point_best;
-	//Ñ­»·ÅĞ¶ÏÓï¾ä£¬Ö±ÖÁ±ßÔµµã¼¯ÖĞµÄµã¾­Ïà¶ÔÌİ¶È·ùÖµ±È½ÏºóÖÃ¿Õ
 	
-
-		//¶ÔÃ¿´Î±éÀúÑ°Ö·µÄÏà¶ÔÌİ¶È·ùÖµ×ø±êµãrÁÚÓòÄÚµÄÆäËûµã×ø±ê¡¢¹éÒ»»¯Ìİ¶È·ùÖµºÍÏà¶ÔÌİ¶È·ùÖµ¾ùÖÃ0
-		
-
-		// If all points are empty, break the loop
-		if (allEmpty) {
-			break;
-		}
-	}
-	Mat outimg(outputImage.size(), CV_8UC3);
-	Mat templateimg0;
-	outputImage.convertTo(templateimg0, CV_8UC3);
-	cvtColor(templateimg0, outimg, COLOR_GRAY2BGR);
-	//Éú³É×îÖÕµÄÄ£°åĞÅÏ¢ÃèÊö×Ó£¬°üÀ¨±ßÔµµãÏà¶Ô×ø±ê¹ØÏµ¡¢XºÍY·½ÏòµÄ¹éÒ»»¯Ìİ¶È·ùÖµ
+	//ç”Ÿæˆæœ€ç»ˆçš„æ¨¡æ¿ä¿¡æ¯æè¿°å­ï¼ŒåŒ…æ‹¬è¾¹ç¼˜ç‚¹ç›¸å¯¹åæ ‡å…³ç³»ã€Xå’ŒYæ–¹å‘çš„å½’ä¸€åŒ–æ¢¯åº¦å¹…å€¼
 	
 	return outimg;
 }
 
 double ChipMatch::MatchTemplate(Mat& searchImage, double min_score, double greediness, Point& resultPoint0, double& angle, Point** t_Points, double** t_derivativeX, double** t_derivativeY) {
-	//Ïà¹Ø²ÎÊı³õÊ¼»¯
+	//ç›¸å…³å‚æ•°åˆå§‹åŒ–
 	double match_sum = 0;
 	double m_score = 0;
-	//Ä¿±êÍ¼ÏñÖĞ£¬ÔÚÄ³Ò»ËÑË÷µãÊ±£¬¶ÔÓ¦Ä£°åĞÅÏ¢ÃèÊö×ÓÖĞµÄµãÎ»ÖÃ
-	int X;
-	int Y;
-	double template_GradientX, template_GradientY;
-	double s_dx, s_dy;
-	double r_score;
-	int sum_m;
-	Point match_point;
-	//¸´ÖÆ£¬²»»áÒâÍâ¸Ä±äÔ­Ê¼Í¼ÏñÊı¾İ
-	Mat src = searchImage.clone();
-	Mat src1 = searchImage.clone();
-
-	//------------------»ñÈ¡×îĞ¡Íâ½Ó¾ØĞÎ--------------------
+	//ç›®æ ‡å›¾åƒä¸­ï¼Œåœ¨æŸä¸€æœç´¢ç‚¹æ—¶ï¼Œå¯¹åº”æ¨¡æ¿ä¿¡æ¯æè¿°å­ä¸­çš„ç‚¹ä½ç½®
 	
-	//ÌáÈ¡Ä¿±êÍ¼ÏñÖĞÄ¿±êµÄ×îĞ¡Íâ½Ó¾ØĞÎ
-	for (int i = 0; i < contour.size(); i++)
-	{
-		double area = contourArea(contour[i]);
-		if (area > minArea)
-		{
-			MinBox = minAreaRect(contour[i]);
-		}
-	}
-	//×îĞ¡Íâ½Ó¾ØĞÎÖĞĞÄµã×÷Îª½¨Á¢×îĞ¡ËÑË÷ÇøÓòµÄÖĞĞÄµã¡¢µÚÒ»²½ÁÚÓòËÑË÷µÄ³õÊ¼µã
+
+	//------------------è·å–æœ€å°å¤–æ¥çŸ©å½¢--------------------
+	
+	//æå–ç›®æ ‡å›¾åƒä¸­ç›®æ ‡çš„æœ€å°å¤–æ¥çŸ©å½¢
+	
+	//æœ€å°å¤–æ¥çŸ©å½¢ä¸­å¿ƒç‚¹ä½œä¸ºå»ºç«‹æœ€å°æœç´¢åŒºåŸŸçš„ä¸­å¿ƒç‚¹ã€ç¬¬ä¸€æ­¥é‚»åŸŸæœç´¢çš„åˆå§‹ç‚¹
 	Point2f center = MinBox.center;
-	//»ñÈ¡Ä¿±êÍ¼ÏñÖĞËùÓĞµãµÄË®Æ½ºÍ´¹Ö±·½Ïò±ßÔµ
+	//è·å–ç›®æ ‡å›¾åƒä¸­æ‰€æœ‰ç‚¹çš„æ°´å¹³å’Œå‚ç›´æ–¹å‘è¾¹ç¼˜
 	
-	//¶¨ÒåÄ¿±êÍ¼ÏñÖĞµãµÄÌİ¶È·ùÖµ¡¢XºÍY·½ÏòµÄ¹éÒ»»¯Ìİ¶È·ùÖµ
-	double searchGradient;
-	double search_GradientX;
-	double search_GradientY;
-	//¶¨Òå½Ç¶ÈËÑË÷·¶Î§---¸ÄÍâ½Óº¯Êı¿ÉÊäÈëµÄ²ÎÊı
-	int startAngle = -5;
-	int endAngle = 5;
-	double step = 0.1;
-	//¶¨ÒåÔÚÖÚ¶àÆ«ÒÆ½Ç¶ÈÏÂ£¬ÏàËÆ¶ÈµÃ·Ö¼¯ºÍ×îÖÕÆ¥Åäµã¼¯
-	vector<double> r_scores;
-	vector<Point> match_points;
-	//¶¨ÒåµÚ¶ş²½ÁÚÓòËÑË÷µÄ³õÊ¼µã
-	Point match_point0;
-	//ÏàËÆÆ¥Åä¹«Ê½¡¢ÏàËÆ¶È×îµÍãĞÖµËÑË÷²ßÂÔÖĞµÄÏà¹Ø²ÎÊı
-	double M_min = 80;
-	double score_min = 0.97;
-	double score_a = 0.05;
-	//¼ÆËãÌ°ĞÄÍ£Ö¹ËÑË÷²ÎÊı
+	//å®šä¹‰ç›®æ ‡å›¾åƒä¸­ç‚¹çš„æ¢¯åº¦å¹…å€¼ã€Xå’ŒYæ–¹å‘çš„å½’ä¸€åŒ–æ¢¯åº¦å¹…å€¼
+	
+	
+	//è®¡ç®—è´ªå¿ƒåœæ­¢æœç´¢å‚æ•°
 	double norm_min_score = min_score / candidatePoint_n;
-	double norm_greediness = (1 - greediness * min_score) / (1 - min_score) / candidatePoint_n;//½«1-greediness¸ÄÎªÁË1-min_score£»
+	double norm_greediness = (1 - greediness * min_score) / (1 - min_score) / candidatePoint_n;//å°†1-greedinessæ”¹ä¸ºäº†1-min_scoreï¼›
 
-	//-----------------ËÑË÷Æ¥Åä¹ı³Ì--------------------
+	//-----------------æœç´¢åŒ¹é…è¿‡ç¨‹--------------------
 
-	//ÏàËÆ¶È×îµÍãĞÖµËÑË÷²ßÂÔµÚÒ»²½£ºÅĞ¶ÏÆ«ÒÆ·½Ïò
+	//ç›¸ä¼¼åº¦æœ€ä½é˜ˆå€¼æœç´¢ç­–ç•¥ç¬¬ä¸€æ­¥ï¼šåˆ¤æ–­åç§»æ–¹å‘
 	
-		//ÔÚÒ»¸ö½Ç¶ÈËÑË÷½áÊøºó£¬ĞèÒª³õÊ¼»¯ÏàËÆ¶ÈµÃ·Ö£¬±ÜÃâÇ°ºó²»Í¬½Ç¶ÈµÄÏàËÆ¶ÈµÃ·ÖµÄÓ°Ïì
+		//åœ¨ä¸€ä¸ªè§’åº¦æœç´¢ç»“æŸåï¼Œéœ€è¦åˆå§‹åŒ–ç›¸ä¼¼åº¦å¾—åˆ†ï¼Œé¿å…å‰åä¸åŒè§’åº¦çš„ç›¸ä¼¼åº¦å¾—åˆ†çš„å½±å“
 		r_score = 0;
-		//µÚÒ»²½ÁÚÓòËÑË÷£¬¸ôµãÑ¡È¡±È½ÏÏàËÆ¶È£¬×î´óÕßÎªÏÂÒ»²½ÁÚÓòËÑË÷µÄ³õÊ¼µã
+		//ç¬¬ä¸€æ­¥é‚»åŸŸæœç´¢ï¼Œéš”ç‚¹é€‰å–æ¯”è¾ƒç›¸ä¼¼åº¦ï¼Œæœ€å¤§è€…ä¸ºä¸‹ä¸€æ­¥é‚»åŸŸæœç´¢çš„åˆå§‹ç‚¹
 		
-				//Í¬ÉÏ£¬Ğè¶Ô²»Í¬ËÑË÷µãÏÂµÄÏàËÆ¶ÈµÃ·Ö¾ù³õÊ¼»¯
+				//åŒä¸Šï¼Œéœ€å¯¹ä¸åŒæœç´¢ç‚¹ä¸‹çš„ç›¸ä¼¼åº¦å¾—åˆ†å‡åˆå§‹åŒ–
 				match_sum = 0;
 				for (int m = 0; m < candidatePoint_n; m++) {
-					//Ğı×ª±ä»»»ù×¼Ä£°åĞÅÏ¢ÃèÊö×Ó£¬Ïà¶Ô×ø±ê¡¢¹éÒ»»¯Ìİ¶È·ùÖµ
+					//æ—‹è½¬å˜æ¢åŸºå‡†æ¨¡æ¿ä¿¡æ¯æè¿°å­ï¼Œç›¸å¯¹åæ ‡ã€å½’ä¸€åŒ–æ¢¯åº¦å¹…å€¼
 					
 					X = i + a;
 					Y = j + b;
@@ -247,9 +184,9 @@ double ChipMatch::MatchTemplate(Mat& searchImage, double min_score, double greed
 					s_dx = static_cast<double>(s_x.at<float>(X, Y));
 					s_dy = static_cast<double>(s_y.at<float>(X, Y));
 					searchGradient = sqrt(s_dx * s_dx + s_dy * s_dy);
-					//µ±Ä¿±êÍ¼ÏñÔÚÄ³Ò»ËÑË÷µãÊ±£¬¶ÔÓ¦Ä£°åĞÅÏ¢ÃèÊö×ÓµÄµãÌİ¶È·ùÖµ´óÓÚ¸ÃãĞÖµ£¬²Å½øĞĞÏàËÆ¶È¹«Ê½¼ÆËã
+					//å½“ç›®æ ‡å›¾åƒåœ¨æŸä¸€æœç´¢ç‚¹æ—¶ï¼Œå¯¹åº”æ¨¡æ¿ä¿¡æ¯æè¿°å­çš„ç‚¹æ¢¯åº¦å¹…å€¼å¤§äºè¯¥é˜ˆå€¼ï¼Œæ‰è¿›è¡Œç›¸ä¼¼åº¦å…¬å¼è®¡ç®—
 					if (searchGradient >= M_min) {
-						search_GradientX = s_dx / searchGradient;  //ÅĞ¶ÏÉèÖÃÎª0½çÏŞÌõ¼ş·ÅÖÃÎ»ÖÃ
+						search_GradientX = s_dx / searchGradient;  //åˆ¤æ–­è®¾ç½®ä¸º0ç•Œé™æ¡ä»¶æ”¾ç½®ä½ç½®
 						search_GradientY = s_dy / searchGradient;
 						if ((template_GradientX != 0 || template_GradientY != 0) && (s_dx != 0 || s_dy != 0)) {
 							match_sum += template_GradientX * search_GradientX + template_GradientY * search_GradientY;
@@ -257,7 +194,7 @@ double ChipMatch::MatchTemplate(Mat& searchImage, double min_score, double greed
 					}
 					sum_m = m + 1;
 					m_score = match_sum / sum_m;
-					//Ì°ĞÄ¹«Ê½¼°Ê±Í£Ö¹¶àÓà¼ÆËã
+					//è´ªå¿ƒå…¬å¼åŠæ—¶åœæ­¢å¤šä½™è®¡ç®—
 					if (m_score < MIN((min_score - 1) + norm_greediness * (sum_m), norm_min_score * (sum_m))) {
 						break;
 					}
@@ -269,13 +206,13 @@ double ChipMatch::MatchTemplate(Mat& searchImage, double min_score, double greed
 				}
 			}
 		}
-		//±£ÁôµÚÒ»²½ÁÚÓòËÑË÷µÃµ½µÄÏàËÆ¶È×î´óÖµ
+		//ä¿ç•™ç¬¬ä¸€æ­¥é‚»åŸŸæœç´¢å¾—åˆ°çš„ç›¸ä¼¼åº¦æœ€å¤§å€¼
 		
-		//µÚ¶ş²½ÁÚÓòËÑË÷£º°ËÁÚÓò·¶Î§±È½Ï
+		//ç¬¬äºŒæ­¥é‚»åŸŸæœç´¢ï¼šå…«é‚»åŸŸèŒƒå›´æ¯”è¾ƒ
 		
-				//±ÜÃâ¸ÃµãµÄ¶ş´Î¼ÆËã
+				//é¿å…è¯¥ç‚¹çš„äºŒæ¬¡è®¡ç®—
 				
-					//Ì°ĞÄ¹«Ê½¼°Ê±Í£Ö¹¶àÓà¼ÆËã
+					//è´ªå¿ƒå…¬å¼åŠæ—¶åœæ­¢å¤šä½™è®¡ç®—
 					if (m_score < MIN((min_score - 1) + norm_greediness * (sum_m), norm_min_score * (sum_m))) {
 						break;
 					}
@@ -287,100 +224,34 @@ double ChipMatch::MatchTemplate(Mat& searchImage, double min_score, double greed
 				}
 			}
 		}
-		//ĞÎ³ÉÅĞ¶ÏÆ«ÒÆ·½ÏòÊ±£¬²»Í¬½Ç¶ÈÏÂµÄÏàËÆ¶È¼¯ºÍÆ¥Åäµã¼¯
+		//å½¢æˆåˆ¤æ–­åç§»æ–¹å‘æ—¶ï¼Œä¸åŒè§’åº¦ä¸‹çš„ç›¸ä¼¼åº¦é›†å’ŒåŒ¹é…ç‚¹é›†
 		r_scores.push_back(r_score);
 		match_points.push_back(match_point);
 	}
-	//È¡¾à0½Ç¶ÈÒ»¶¨¼ä¾àµÄ½Ç¶ÈÄ£°å±È½ÏÏàËÆ¶ÈµÃ·ÖÅĞ¶Ï·½Ïò£¬Èô¸ºÏòÆ«ÒÆ
-	
-		//ËÑË÷¸ºÏòÆ«ÒÆ·½ÏòµÄÊ£ÏÂ½Ç¶ÈÄ£°åÓëÄ¿±êÍ¼ÏñÏàËÆ¶È
-		
-			//µÚÒ»²½ÁÚÓòËÑË÷£¬¸ôµãÑ¡È¡±È½ÏÏàËÆ¶È£¬×î´óÕßÎªÏÂÒ»²½ÁÚÓòËÑË÷µÄ³õÊ¼µã
-			
-						if (searchGradient >= M_min) {
-							search_GradientX = s_dx / searchGradient;  //ÅĞ¶ÏÉèÖÃÎª0½çÏŞÌõ¼ş·ÅÖÃÎ»ÖÃ
-							search_GradientY = s_dy / searchGradient;
-						
-						//Ì°ĞÄ¹«Ê½¼°Ê±Í£Ö¹¶àÓà¼ÆËã
-						if (m_score < MIN((min_score - 1) + norm_greediness * (sum_m), norm_min_score * (sum_m))) {
-							break;
-						}
-					}
-					if (m_score > r_score) {
-						r_score = m_score;
-						match_point0.x = i;
-						match_point0.y = j;
-					}
-				}
-			}
-			double copy_score = r_score;
-			r_score = 0;
-			//µÚ¶ş²½ÁÚÓòËÑË÷£º°ËÁÚÓò·¶Î§±È½Ï
-			
-
-						
-						if (searchGradient >= M_min) {
-							search_GradientX = s_dx / searchGradient;  //ÅĞ¶ÏÉèÖÃÎª0½çÏŞÌõ¼ş·ÅÖÃÎ»ÖÃ
-							search_GradientY = s_dy / searchGradient;
-
-						//Ì°ĞÄ¹«Ê½¼°Ê±Í£Ö¹¶àÓà¼ÆËã
-						
-			//ĞÎ³É¸ÃÄ¿±êÍ¼ÏñÏÂ£¬×îÖÕÆ¥ÅäËÑË÷µÃµ½µÄÏàËÆ¶È¼¯¡¢×î¼Ñ±ßÔµµã¼¯
-			r_scores.push_back(r_score);
-			match_points.push_back(match_point);
-			//±È½Ï³õÊ¼Èô¸É½Ç¶ÈÄ£°åÏàËÆ¶ÈÓë×îµÍÏàËÆ¶ÈãĞÖµ£¬ÈôĞ¡ÓÚ³õÊ¼ÉèÖÃãĞÖµ£¬Ôò¸üĞÂ¸ÃãĞÖµ
-			if (s >= -1.1 && r_score <= score_min) {
-				score_min = r_score - score_a;
-			}
-			//ÈôÔÚºóĞøËÑË÷½Ç¶ÈÊ±£¬³öÏÖÄ³½Ç¶ÈÄ£°åÏàËÆ¶ÈĞ¡ÓÚ¸üĞÂºóµÄÏàËÆ¶ÈãĞÖµ£¬ÔòÍ£Ö¹½ÓÏÂÀ´µÄËÑË÷
-			else if (r_score <= score_min) {
-				break;
-			}
-		}
-	}
-	//È¡¾à0½Ç¶ÈÒ»¶¨¼ä¾àµÄ½Ç¶ÈÄ£°å±È½ÏÏàËÆ¶ÈµÃ·ÖÅĞ¶Ï·½Ïò£¬ÈôÕıÏòÆ«ÒÆ
-	
-		//ËÑË÷ÕıÏòÆ«ÒÆ·½ÏòµÄÊ£ÏÂ½Ç¶ÈÄ£°åÓëÄ¿±êÍ¼ÏñÏàËÆ¶È
-		
-			//µÚÒ»²½ÁÚÓòËÑË÷£¬¸ôµãÑ¡È¡±È½ÏÏàËÆ¶È£¬×î´óÕßÎªÏÂÒ»²½ÁÚÓòËÑË÷µÄ³õÊ¼µã
-			
-						//Ì°ĞÄ¹«Ê½¼°Ê±Í£Ö¹¶àÓà¼ÆËã
-						
-			//µÚ¶ş²½ÁÚÓòËÑË÷£º°ËÁÚÓò·¶Î§±È½Ï
-			
-						//Ì°ĞÄ¹«Ê½¼°Ê±Í£Ö¹¶àÓà¼ÆËã
-						
-			//ĞÎ³É¸ÃÄ¿±êÍ¼ÏñÏÂ£¬×îÖÕÆ¥ÅäËÑË÷µÃµ½µÄÏàËÆ¶È¼¯¡¢×î¼Ñ±ßÔµµã¼¯
-			
-			//±È½Ï³õÊ¼Èô¸É½Ç¶ÈÄ£°åÏàËÆ¶ÈÓë×îµÍÏàËÆ¶ÈãĞÖµ£¬ÈôĞ¡ÓÚ³õÊ¼ÉèÖÃãĞÖµ£¬Ôò¸üĞÂ¸ÃãĞÖµ
-			
-			//ÈôÔÚºóĞøËÑË÷½Ç¶ÈÊ±£¬³öÏÖÄ³½Ç¶ÈÄ£°åÏàËÆ¶ÈĞ¡ÓÚ¸üĞÂºóµÄÏàËÆ¶ÈãĞÖµ£¬ÔòÍ£Ö¹½ÓÏÂÀ´µÄËÑË÷
-			
-
-	//-------------Ñ°ÕÒ×î¼ÑÆ¥ÅäµãºÍÆ«ÒÆ½Ç¶ÈÊ±µÄÄ£°å----------------
+	//-------------å¯»æ‰¾æœ€ä½³åŒ¹é…ç‚¹å’Œåç§»è§’åº¦æ—¶çš„æ¨¡æ¿----------------
 
 	double maxIndex;
-	//¶¨Î»ÏàËÆ¶È¼¯ÖĞ×î´óÏàËÆ¶ÈËùÔÚµÄÎ»ÖÃ
+	//å®šä½ç›¸ä¼¼åº¦é›†ä¸­æœ€å¤§ç›¸ä¼¼åº¦æ‰€åœ¨çš„ä½ç½®
 	auto score_max = std::max_element(r_scores.begin(), r_scores.end());
 	if (score_max != r_scores.end()) {
 		maxIndex = std::distance(r_scores.begin(), score_max);
 	}
-	//Ñ°ÕÒ×î´óµÃ·ÖÖµ¶ÔÓ¦µÄÆ¥Åäµã¡¢ÏàËÆ¶ÈµÃ·Ö
+	//å¯»æ‰¾æœ€å¤§å¾—åˆ†å€¼å¯¹åº”çš„åŒ¹é…ç‚¹ã€ç›¸ä¼¼åº¦å¾—åˆ†
 	resultPoint0.x = match_points[maxIndex].x;
 	resultPoint0.y = match_points[maxIndex].y;
 	double maxScore = *score_max;
-	//Ñ°ÕÒ×î´óÏàËÆ¶È¶ÔÓ¦µÄÆ«ÒÆ½Ç¶È£¬ÈôÔÚ±È½ÏÆ«ÒÆ·½ÏòÊ±µÄ½Ç¶ÈÇø¶Î
+	//å¯»æ‰¾æœ€å¤§ç›¸ä¼¼åº¦å¯¹åº”çš„åç§»è§’åº¦ï¼Œè‹¥åœ¨æ¯”è¾ƒåç§»æ–¹å‘æ—¶çš„è§’åº¦åŒºæ®µ
 	
-	//ÈôÆ«ÒÆ½Ç¶ÈÔÚ¸ºÏò½Ç¶ÈÇø¶Î
+	//è‹¥åç§»è§’åº¦åœ¨è´Ÿå‘è§’åº¦åŒºæ®µ
 	
-	//ÈôÆ«ÒÆ·½ÏòÔÚÕıÏò½Ç¶ÈÇø¶Î
+	//è‹¥åç§»æ–¹å‘åœ¨æ­£å‘è§’åº¦åŒºæ®µ
 	
 }
 
 ChipMatch::~ChipMatch(void)
 {
-	//µ±¶ÔÏóÊ¹ÓÃÍê±ÏÊ±£¬¼ÇµÃdelete£¬ÊÍ·ÅÄÚ´æ
-	//newºóÃæÒª½øĞĞÊÍ·Å£¬delete£»ÔÚ½øĞĞ¹¤³Ì±à³ÌÊ±£¬½¨ÒéÊ¹ÓÃ¶ÑÄÚ´æ£¬Õ»ÄÚ´æÖ»ÊÇ¶ÌÔİµÄ±äÁ¿ 
+	//å½“å¯¹è±¡ä½¿ç”¨å®Œæ¯•æ—¶ï¼Œè®°å¾—deleteï¼Œé‡Šæ”¾å†…å­˜
+	//newåé¢è¦è¿›è¡Œé‡Šæ”¾ï¼Œdeleteï¼›åœ¨è¿›è¡Œå·¥ç¨‹ç¼–ç¨‹æ—¶ï¼Œå»ºè®®ä½¿ç”¨å †å†…å­˜ï¼Œæ ˆå†…å­˜åªæ˜¯çŸ­æš‚çš„å˜é‡ 
 	delete[] Points;
 	delete[] derivativeX;
 	delete[] derivativeY;
@@ -388,7 +259,7 @@ ChipMatch::~ChipMatch(void)
 
 }
 
-//·ÖÅäÁÙÊ±¾ØÕóÄÚ´æ
+//åˆ†é…ä¸´æ—¶çŸ©é˜µå†…å­˜
 void ChipMatch::CreateMatrix(double**& matrix, int, int)
 {
 	matrix = new double* [(size_t)modelHeight - 2];
@@ -396,7 +267,7 @@ void ChipMatch::CreateMatrix(double**& matrix, int, int)
 		matrix[i] = new double[(size_t)modelWidth - 2];
 	}
 }
-//ÊÍ·ÅÁÙÊ±¾ØÕóÄÚ´æ
+//é‡Šæ”¾ä¸´æ—¶çŸ©é˜µå†…å­˜
 void ChipMatch::ReleaseMatrix(double**& matrix, int size)
 {
 	for (int i = 0; i < modelHeight; i++) {
